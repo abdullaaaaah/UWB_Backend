@@ -9,24 +9,33 @@ async function handleMultipleDistance(req, res) {
         }
 
         // Fetch data from mongodbService based on the transmitterSerialNumbers
-        const distances = [];
+        const allReads = [];
+        let totalCount = 0; // Initialize total count
+
         for (const serialNumber of transmitterSerialNumbers) {
             const jsonData = await mongodbService.getDataByTransmitterSerialNumber(serialNumber);
             if (!jsonData || !jsonData.reads || jsonData.reads.length === 0) {
-                // If no data found for the transmitter serial number or no reads available, push null distance and count
-                distances.push({ transmitterSerialNumber: serialNumber, tagData: [] });
-            } else {
-                // Find the latest read for the transmitter serial number
-                const latestRead = jsonData.reads.reduce((acc, curr) => {
-                    return (parseInt(acc.timeStampUTC) > parseInt(curr.timeStampUTC)) ? acc : curr;
-                });
-
-                // Push the latest distance and count for the transmitter serial number
-                distances.push({ transmitterSerialNumber: serialNumber, tagData: [{ distance: latestRead.distance, count: latestRead.count }] });
+                // If no data found for the transmitter serial number or no reads available, continue to the next one
+                continue;
             }
+
+            // Push all reads for the transmitter serial number
+            allReads.push(...jsonData.reads.map(read => ({
+                deviceUID: read.deviceUID,
+                distance: read.distance,
+            })));
+
+            // Increment total count by the number of reads for this transmitter serial number
+            totalCount += jsonData.reads.length;
         }
 
-        res.json(distances);
+        // Prepare response object
+        const responseData = {
+            reads: allReads,
+            allCount: totalCount
+        };
+
+        res.json(responseData);
     } catch (error) {
         console.error('Error handling data:', error);
         res.status(500).send('Internal Server Error');
