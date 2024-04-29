@@ -9,11 +9,22 @@ async function handleData(req, res) {
         }
     
         console.log('Received data via HTTP API:', jsonData);
+
+        // Check if jsonData is null
+        if (!Object.keys(jsonData).length) {
+          console.log('Data is null. Not storing in MongoDB.');
+          return res.send('Data is null. Not storing in MongoDB.');
+        }
         
         // Call the storeData function from mongodbService
-        await mongodbService.storeData(jsonData);
-        
-        res.send('Data received successfully!');
+        const result = await mongodbService.storeData(jsonData);
+
+        // Send response based on the result of storing data
+        if (result) {
+          res.send('Data received and stored successfully!');
+        } else {
+          res.status(500).send('Failed to store data in MongoDB');
+        }
     } catch (error) {
         console.error('Error handling data:', error);
         res.status(500).send('Internal Server Error');
