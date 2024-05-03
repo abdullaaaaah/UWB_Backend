@@ -1,3 +1,5 @@
+const mongodbService = require('../services/mongodbService');
+
 async function handleDistance(req, res) {
     try {
         const { transmitterSerialNumbers } = req.body;
@@ -6,16 +8,26 @@ async function handleDistance(req, res) {
             return res.status(400).send('Transmitter serial numbers must be provided as an array');
         }
 
-        // Fetch the latest inserted document for each transmitter serial number
+        // Fetch data from mongodbService based on the transmitterSerialNumbers
         const distances = [];
         for (const serialNumber of transmitterSerialNumbers) {
-            const latestDocument = await mongodbService.getLatestDataByTransmitterSerialNumber(serialNumber);
-            if (!latestDocument) {
+            const jsonData = await mongodbService.getDataByTransmitterSerialNumber(serialNumber);
+            if (!jsonData) {
                 // If no data found for the transmitter serial number, push null distance
                 distances.push({ transmitterSerialNumber: serialNumber, distance: null });
             } else {
-                // Push the distance from the latest inserted document
-                distances.push({ transmitterSerialNumber: serialNumber, distance: latestDocument.distance });
+                // Find the latest read for the transmitter serial number
+                const latestRead = jsonData.reads.reduce((acc, curr) => {
+                    return (acc.timeStampUTC > curr.timeStampUTC) ? acc : curr;
+                }, {});
+
+                if (!latestRead) {
+                    // If no latest read found, push null distance
+                    distances.push({ transmitterSerialNumber: serialNumber, distance: null });
+                } else {
+                    // Push the latest distance for the transmitter serial number
+                    distances.push({ transmitterSerialNumber: serialNumber, distance: latestRead.distance });
+                }
             }
         }
 
