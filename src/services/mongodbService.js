@@ -89,18 +89,35 @@ async function storeData(data) {
     }
 }
 
+// // Function to retrieve data by transmitter serial number
+// async function getDataByTransmitterSerialNumber(serialNumber) {
+//     try {
+//         await connect();
+//         const db = client.db("Indoor_Positioning");
+//         const collection = db.collection("data");
+//         const result = await collection.findOne({ "transmitterSerialNumber": serialNumber });
+//         return result;
+//     } catch (error) {
+//         console.error('Error fetching data from MongoDB:', error);
+//         throw error;
+//     }
+// }
 // Function to retrieve data by transmitter serial number
 async function getDataByTransmitterSerialNumber(serialNumber) {
     try {
         await connect();
         const db = client.db("Indoor_Positioning");
         const collection = db.collection("data");
-        const result = await collection.findOne({ "transmitterSerialNumber": serialNumber });
-        return result;
+        const result = await collection.find({ "transmitterSerialNumber": serialNumber })
+            .sort({ "timestamp": -1 }) // Sort by timestamp in descending order
+            .limit(1) // Limit the result to 1 document
+            .toArray();
+        return result[0]; // Return the first (and only) document
     } catch (error) {
         console.error('Error fetching data from MongoDB:', error);
         throw error;
     }
 }
+
 
 module.exports = { connect, close, storeData, getDataByTransmitterSerialNumber };
