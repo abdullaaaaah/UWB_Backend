@@ -60,14 +60,16 @@ async function handleData(req, res) {
       // Check if allCount is greater than zero
       if (jsonData.allCount > 0) {
         try {
-          // Convert timestamp to Pakistan Standard Time
+          // Replace timeStampUTC with current PKT timestamp
+          const currentPKT = moment().tz('Asia/Karachi').format('YYYY-MM-DD HH:mm:ss');
           const readsWithPKT = jsonData.reads.map(read => ({
             ...read,
-            timeStampPKT: moment.unix(read.timeStampUTC).tz('Asia/Karachi').format('YYYY-MM-DD HH:mm:ss')
+            timeStampUTC: currentPKT  // Replace timeStampUTC with PKT timestamp
           }));
   
-          // Update jsonData with reads containing PKT timestamps
+          // Update jsonData with reads containing current PKT timestamps and remove timeStampPKT
           jsonData.reads = readsWithPKT;
+          delete jsonData.timeStampPKT;
   
           const result = await mongodbService.storeData(jsonData);
           console.log('Data stored in MongoDB:', jsonData);
@@ -82,3 +84,4 @@ async function handleData(req, res) {
 };
 
 module.exports = { handleData };
+
