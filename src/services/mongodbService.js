@@ -89,19 +89,6 @@ async function storeData(data) {
     }
 }
 
-// // Function to retrieve data by transmitter serial number
-// async function getDataByTransmitterSerialNumber(serialNumber) {
-//     try {
-//         await connect();
-//         const db = client.db("Indoor_Positioning");
-//         const collection = db.collection("data");
-//         const result = await collection.findOne({ "transmitterSerialNumber": serialNumber });
-//         return result;
-//     } catch (error) {
-//         console.error('Error fetching data from MongoDB:', error);
-//         throw error;
-//     }
-// }
 async function getDataByTransmitterSerialNumber(serialNumber) {
     try {
         await connect();
@@ -117,5 +104,30 @@ async function getDataByTransmitterSerialNumber(serialNumber) {
         throw error;
     }
 }
+async function getMDataByTransmitterSerialNumber(serialNumber) {
+    try {
+        await connect();
+        const db = client.db("Indoor_Positioning");
+        const collection = db.collection("data");
+        const result = await collection.findOne({ "transmitterSerialNumber": serialNumber,"allCount": { $gt: 1 } }, { sort: { "_id": -1 }, limit: 1 });
+        
+        if (!result) {
+            return null; // No data found for the transmitter serial number
+        }
 
-module.exports = { connect, close, storeData, getDataByTransmitterSerialNumber };
+        const reads = result.reads || []; // Get the reads array, or an empty array if it doesn't exist
+
+        // Construct an array of objects containing deviceUID and distance
+        const distances = reads.map(read => ({
+            deviceUID: read.deviceUID,
+            distance: read.distance
+        }));
+
+        return distances;
+    } catch (error) {
+        console.error('Error fetching data from MongoDB:', error);
+        throw error;
+    }
+}
+
+module.exports = { connect, close, storeData, getDataByTransmitterSerialNumber,getMDataByTransmitterSerialNumber };

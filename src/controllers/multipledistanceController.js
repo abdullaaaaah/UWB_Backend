@@ -8,31 +8,36 @@ async function handleMultipleDistance(req, res) {
             return res.status(400).send('Transmitter serial numbers must be provided as an array');
         }
 
-        // Fetch data from mongodbService based on the transmitterSerialNumbers
-        const allReads = [];
-        let totalCount = 0; // Initialize total count
+        // Fetch latest data from mongodbService based on the transmitterSerialNumbers
+        const transmittersData = [];
 
         for (const serialNumber of transmitterSerialNumbers) {
-            const jsonData = await mongodbService.getDataByTransmitterSerialNumber(serialNumber);
-            if (!jsonData || !jsonData.reads || jsonData.reads.length === 0) {
-                // If no data found for the transmitter serial number or no reads available, continue to the next one
+            const transmitterData = {
+                transmitterSerialNum: serialNumber,
+                data: []
+            };
+
+            const latestData = await mongodbService.getMDataByTransmitterSerialNumber(serialNumber);
+            if (!latestData || !Array.isArray(latestData)) {
+                // If no data found for the transmitter serial number or data is not an array, continue to the next one
+                transmittersData.push(transmitterData);
                 continue;
             }
 
-            // Push all reads for the transmitter serial number
-            allReads.push(...jsonData.reads.map(read => ({
-                deviceUID: read.deviceUID,
-                distance: read.distance,
-            })));
+            // Push the latest reads for the transmitter serial number
+            latestData.forEach(dataItem => {
+                transmitterData.data.push({
+                    deviceUID: dataItem.deviceUID,
+                    distance: dataItem.distance,
+                });
+            });
 
-            // Increment total count by the number of reads for this transmitter serial number
-            totalCount += jsonData.reads.length;
+            transmittersData.push(transmitterData);
         }
 
         // Prepare response object
         const responseData = {
-            reads: allReads,
-            allCount: totalCount
+            transmitters: transmittersData
         };
 
         res.json(responseData);

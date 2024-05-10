@@ -5,6 +5,7 @@ const trilaterationRoutes = require('./routes/trilaterationRoutes');
 const testRoutes = require('./routes/testRoutes');
 const distanceRoutes = require('./routes/distanceRoutes');
 const multipledistanceRoutes = require('./routes/multipleDistanceRoutes');
+const multitrilaterationRoutes = require('./routes/multitrilaterationRoute');
 
 const app = express();
 const port = process.env.PORT || 6611;
@@ -18,6 +19,7 @@ app.use(trilaterationRoutes);
 app.use(testRoutes);
 app.use(distanceRoutes);
 app.use(multipledistanceRoutes);
+app.use(multitrilaterationRoutes);
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

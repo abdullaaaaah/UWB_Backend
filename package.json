@@ -4,12 +4,13 @@
     "description": "Description of your project",
     "main": "server.js",
     "scripts": {
-        "start": "node server.js"
+        "start": "nodemon server.js"
     },
     "dependencies": {
         "cors": "^2.8.5",
         "express": "^4.17.1",
         "moment-timezone": "^0.5.45",
-        "mongodb": "^3.6.9"
+        "mongodb": "^3.6.9",
+        "nodemon": "^3.1.0"
     }
 }
