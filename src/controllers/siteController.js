@@ -30,6 +30,8 @@ const uploadImageToCloudinary = async (filePath) => {
 
 const addSite = async (req, res) => {
     try {
+        console.log('Request Body:', req.body);
+
         if (!req.file) {
             return res.status(400).json({ error: 'Image file is required' });
         }
