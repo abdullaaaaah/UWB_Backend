@@ -10,7 +10,7 @@ const userRoutes = require('./routes/userRoutes');
 const db = require("./services/db");
 const app = express();
 const port = process.env.PORT || 6611;
-const siteRoutes = require('./routes/siteRoutes');
+const siteRoutes = require('./routes/siteRoute');
 const session = require('express-session');
 
 // Connect to MongoDB
