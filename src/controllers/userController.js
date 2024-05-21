@@ -217,7 +217,7 @@ exports.registerController = async (req, res) => {
 exports.loginController = async (req, res) => {
   console.log(req.body);
   try {
-    const { 'email-address': email, password } = req.body;
+    const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).send({
         success: false,
