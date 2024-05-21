@@ -60,24 +60,7 @@ const addSite = async (req, res) => {
         res.status(500).json({ error: 'Failed to add site' });
     }
 };
-const getSiteById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ error: 'Site ID is required' });
-    }
 
-    const site = await Site.findById(id);
-    if (!site) {
-      return res.status(404).json({ error: 'Site not found' });
-    }
-
-    res.status(200).json(site);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to fetch site' });
-  }
-};
 const getSiteByName = async (req, res) => {
     try {
         const { name } = req.query;
@@ -85,17 +68,106 @@ const getSiteByName = async (req, res) => {
             return res.status(400).json({ error: 'Site name is required' });
         }
 
-        const site = await Site.findOne({ name });
+        const site = await Site.findOne({ name }).lean(); // .lean() returns a plain JavaScript object
         if (!site) {
             return res.status(404).json({ error: 'Site not found' });
         }
 
-        res.status(200).json(site);
+        // Remove the _id and __v fields
+        const { _id, __v, ...siteWithoutIdAndV } = site;
+
+        res.status(200).json(siteWithoutIdAndV);
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Failed to fetch site' });
     }
 };
+const getSiteByNameAndEmail = async (req, res) => {
+    try {
+        const { name, email } = req.query;
+        if (!name || !email) {
+            return res.status(400).json({ error: 'Site name and email are required' });
+        }
 
-  module.exports = { addSite, getSiteById, getSiteByName };
-  
+        const site = await Site.findOne({ name, email }).lean(); // .lean() returns a plain JavaScript object
+        if (!site) {
+            return res.status(404).json({ error: 'Site not found' });
+        }
+
+        // Remove the _id and __v fields
+        const { _id, __v, ...siteWithoutIdAndV } = site;
+
+        res.status(200).json(siteWithoutIdAndV);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to fetch site' });
+    }
+};
+const getAllSitesByEmail = async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const sites = await Site.find({ email }).lean(); // .lean() returns plain JavaScript objects
+        if (sites.length === 0) {
+            return res.status(404).json({ error: 'No sites found for the given email' });
+        }
+
+        // Remove the _id and __v fields from each site
+        const sitesWithoutIdAndV = sites.map(({ _id, __v, ...site }) => site);
+
+        res.status(200).json(sitesWithoutIdAndV);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to fetch sites' });
+    }
+};
+
+const deleteSiteByName = async (req, res) => {
+    try {
+        const { name } = req.query;
+        if (!name) {
+            return res.status(400).json({ error: 'Site name is required' });
+        }
+
+        const site = await Site.findOneAndDelete({ name }).lean(); // .lean() returns a plain JavaScript object
+        if (!site) {
+            return res.status(404).json({ error: 'Site not found' });
+        }
+
+        // Remove the _id and __v fields before sending the response
+        const { _id, __v, ...siteWithoutIdAndV } = site;
+
+        res.status(200).json({ message: 'Site deleted successfully', site: siteWithoutIdAndV });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to delete site' });
+    }
+};
+const deleteSiteByNameAndEmail = async (req, res) => {
+    try {
+        const { name, email } = req.query;
+        if (!name || !email) {
+            return res.status(400).json({ error: 'Site name and email are required' });
+        }
+
+        const site = await Site.findOneAndDelete({ name, email }).lean(); // .lean() returns a plain JavaScript object
+        if (!site) {
+            return res.status(404).json({ error: 'Site not found' });
+        }
+
+        // Remove the _id and __v fields before sending the response
+        const { _id, __v, ...siteWithoutIdAndV } = site;
+
+        res.status(200).json({ message: 'Site deleted successfully', site: siteWithoutIdAndV });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to delete site' });
+    }
+};
+
+
+module.exports = { addSite, getSiteByName ,getAllSitesByEmail,getSiteByNameAndEmail,deleteSiteByName,deleteSiteByNameAndEmail};
+

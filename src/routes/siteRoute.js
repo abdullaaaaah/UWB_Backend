@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { addSite, getSiteById, getSiteByName } = require('../controllers/siteController');
+const { addSite, getSiteByName,getSiteByNameAndEmail ,getAllSitesByEmail,deleteSiteByName,deleteSiteByNameAndEmail} = require('../controllers/siteController');
 
 // Configure Multer storage
 const storage = multer.diskStorage({
@@ -16,7 +16,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post('/sites', upload.single('image'), addSite);
-router.get('/sites/:id', getSiteById);
-router.get('/sites/:name', getSiteByName);
+router.get('/sites',getAllSitesByEmail);
+router.get('/sites', getSiteByName);
+router.get('/sites',getSiteByNameAndEmail);
+router.delete('/sites', deleteSiteByName); // New route
+router.delete('/sites', deleteSiteByNameAndEmail); // New route
 
 module.exports = router;
