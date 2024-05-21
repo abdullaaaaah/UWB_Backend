@@ -170,7 +170,7 @@ exports.registerController = async (req, res) => {
 
     const {
       name,
-      'email-address': email,
+     email,
       password,
     } = req.body;
 
