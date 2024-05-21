@@ -109,20 +109,72 @@ const userModal = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const User = require('../models/userModel'); // Adjust the import according to your project structure
 
+// exports.registerController = async (req, res) => {
+//   try {
+//     console.log("Incoming request body:", req.body);
+
+//     const {
+//       'first-name': firstName,
+//       'last-name': lastName,
+//       'email-address': email,
+//       password,
+//       'date-of-birth': dateOfBirth,
+//       gender
+//     } = req.body;
+
+//     if (!firstName || !lastName || !email || !password || !dateOfBirth || !gender) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please fill all fields",
+//       });
+//     }
+
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//       return res.status(401).send({
+//         success: false,
+//         message: "User already exists",
+//       });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const user = new User({
+//       firstname: firstName,
+//       lastname: lastName,
+//       email,
+//       password: hashedPassword,
+//       dateofbirth: dateOfBirth,
+//       gender,
+//     });
+
+//     await user.save();
+//     console.log("User saved successfully:", user);
+
+//     return res.status(201).send({
+//       success: true,
+//       message: "New user created",
+//       user,
+//     });
+//   } catch (error) {
+//     console.log("Error in Register Controller", error);
+//     return res.status(500).send({
+//       success: false,
+//       message: "An internal server error occurred.",
+//     });
+//   }
+// };
 exports.registerController = async (req, res) => {
   try {
     console.log("Incoming request body:", req.body);
 
     const {
-      'first-name': firstName,
-      'last-name': lastName,
+      name,
       'email-address': email,
       password,
-      'date-of-birth': dateOfBirth,
-      gender
     } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !dateOfBirth || !gender) {
+    if (!name || !email || !password) {
       return res.status(400).send({
         success: false,
         message: "Please fill all fields",
@@ -140,12 +192,9 @@ exports.registerController = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
-      firstname: firstName,
-      lastname: lastName,
+      name,
       email,
       password: hashedPassword,
-      dateofbirth: dateOfBirth,
-      gender,
     });
 
     await user.save();
