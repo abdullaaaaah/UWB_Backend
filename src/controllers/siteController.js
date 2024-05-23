@@ -110,7 +110,9 @@ const getAllSitesByEmail = async (req, res) => {
             return res.status(400).json({ error: 'Email is required' });
         }
 
-        const sites = await Site.find({ email }).lean(); // .lean() returns plain JavaScript objects
+        // const sites = await Site.find({ email }).lean(); // .lean() returns plain JavaScript objects
+        const sites = await Site.find().lean();
+
         if (sites.length === 0) {
             return res.status(404).json({ error: 'No sites found for the given email' });
         }
