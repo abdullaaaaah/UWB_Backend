@@ -111,7 +111,9 @@ const getAllSitesByEmail = async (req, res) => {
         }
 
         // const sites = await Site.find({ email }).lean(); // .lean() returns plain JavaScript objects
-        const sites = await Site.find().lean();
+        // const sites = await Site.find().lean();
+        const sites = await Site.find({}).select('name imageUrl').lean();
+
 
         if (sites.length === 0) {
             return res.status(404).json({ error: 'No sites found for the given email' });
