@@ -17,8 +17,8 @@ const upload = multer({ storage });
 
 router.post('/sites', upload.single('image'), addSite);
 router.get('/sites',getAllSitesByEmail);
-router.get('/sitesDetail', getSiteByName);
-router.get('/sites',getSiteByNameAndEmail);
+router.get('/sitesDetail', getSiteByNameAndEmail);
+router.get('/sites',getSiteByName);
 router.delete('/sites', deleteSiteByName); // New route
 router.delete('/sites', deleteSiteByNameAndEmail); // New route
 
