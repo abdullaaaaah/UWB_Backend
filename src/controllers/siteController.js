@@ -44,6 +44,7 @@ const addSite = async (req, res) => {
 
         // Create new site object
         const newSite = new Site({
+            email:req.body.email,
             name: req.body.name,
             description: req.body.description,
             anchors: JSON.parse(req.body.anchors),
@@ -110,9 +111,9 @@ const getAllSitesByEmail = async (req, res) => {
             return res.status(400).json({ error: 'Email is required' });
         }
 
-        // const sites = await Site.find({ email }).lean(); // .lean() returns plain JavaScript objects
+        const sites = await Site.find({ email }).select('name imageUrl').lean(); // .lean() returns plain JavaScript objects
         // const sites = await Site.find().lean();
-        const sites = await Site.find({}).select('name imageUrl').lean();
+        // const sites = await Site.find({}).select('name imageUrl').lean();
 
 
         if (sites.length === 0) {
