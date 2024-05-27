@@ -25,7 +25,7 @@ app.use(session({
     secret: 'helpmeout', // Add a secret key for session encryption
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set secure to true if using HTTPS
+    cookie: { secure: true } // Set secure to true if using HTTPS
   }));
   
 app.use(express.json());
