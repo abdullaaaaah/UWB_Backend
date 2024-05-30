@@ -273,3 +273,59 @@ exports.logoutController = (req, res) => {
 };
 
 exports.forgetController = (req, res) => {};
+
+exports.updateProfileController = async (req, res) => {
+  try {
+    const { email, oldPassword, name, newPassword } = req.body;
+
+    if (!email || !oldPassword) {
+      return res.status(400).send({
+        success: false,
+        message: "Email and old password are required to update profile",
+      });
+    }
+
+    if (!name && !newPassword) {
+      return res.status(400).send({
+        success: false,
+        message: "Please provide a name or new password to update",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Verify the old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).send({
+        success: false,
+        message: "Old password is incorrect",
+      });
+    }
+
+    const updates = {};
+    if (name) updates.name = name;
+    if (newPassword) updates.password = await bcrypt.hash(newPassword, 10);
+
+    const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
+
+    return res.status(200).send({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.log("Error in Update Profile Controller", error);
+    return res.status(500).send({
+      success: false,
+      message: "An internal server error occurred.",
+    });
+  }
+};
