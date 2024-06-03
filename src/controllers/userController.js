@@ -172,10 +172,17 @@ exports.updateProfileController = async (req, res) => {
   try {
     const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = req.body;
 
-    if (!email || !oldPassword) {
+    // if (!email || !oldPassword) {
+    //   return res.status(400).send({
+    //     success: false,
+    //     message: "Email and old password are required to update profile",
+    //   });
+    // }
+
+    if (!email) {
       return res.status(400).send({
         success: false,
-        message: "Email and old password are required to update profile",
+        message: "Email are required to update profile",
       });
     }
 
