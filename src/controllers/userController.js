@@ -1,6 +1,32 @@
 const userModal = require("../models/userModel");
-const bcrypt = require("bcrypt");
 const User = require('../models/userModel'); // Adjust the import according to your project structure
+const bcrypt = require('bcrypt');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: "dcoajgeh5",
+  api_key: "398428448442352",
+  api_secret: "Rm7Sy0n4EWRx7MY20-i1SM2CCz0",
+});
+
+const uploadImageToCloudinary = async (filePath) => {
+  const maxRetries = 3;
+  let attempt = 0;
+
+  while (attempt < maxRetries) {
+      try {
+          const result = await cloudinary.uploader.upload(filePath);
+          return result;
+      } catch (error) {
+          console.error(`Attempt ${attempt + 1} failed:`, error);
+          attempt++;
+          if (attempt >= maxRetries) {
+              throw error;
+          }
+      }
+  }
+};
 
 exports.registerController = async (req, res) => {
   try {
@@ -112,120 +138,7 @@ exports.logoutController = (req, res) => {
 
 exports.forgetController = (req, res) => {};
 
-// exports.updateProfileController = async (req, res) => {
-//   try {
-//     const { email, oldPassword, name, newPassword } = req.body;
 
-//     if (!email || !oldPassword) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Email and old password are required to update profile",
-//       });
-//     }
-
-//     if (!name && !newPassword) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Please provide a name or new password to update",
-//       });
-//     }
-
-//     const user = await User.findOne({ email });
-
-//     if (!user) {
-//       return res.status(404).send({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // Verify the old password
-//     const isMatch = await bcrypt.compare(oldPassword, user.password);
-//     if (!isMatch) {
-//       return res.status(401).send({
-//         success: false,
-//         message: "Old password is incorrect",
-//       });
-//     }
-
-//     const updates = {};
-//     if (name) updates.name = name;
-//     if (newPassword) updates.password = await bcrypt.hash(newPassword, 10);
-
-//     const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
-
-//     return res.status(200).send({
-//       success: true,
-//       message: "Profile updated successfully",
-//       user: updatedUser,
-//     });
-//   } catch (error) {
-//     console.log("Error in Update Profile Controller", error);
-//     return res.status(500).send({
-//       success: false,
-//       message: "An internal server error occurred.",
-//     });
-//   }
-// };
-
-// exports.updateProfileController = async (req, res) => {
-//   try {
-//     const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = req.body;
-
-//     if (!email || !oldPassword) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Email and old password are required to update profile",
-//       });
-//     }
-
-//     if (!name && !newPassword && !dateOfBirth && !address && !gender) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Please provide at least one field to update",
-//       });
-//     }
-
-//     const user = await User.findOne({ email });
-
-//     if (!user) {
-//       return res.status(404).send({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // Verify the old password
-//     const isMatch = await bcrypt.compare(oldPassword, user.password);
-//     if (!isMatch) {
-//       return res.status(401).send({
-//         success: false,
-//         message: "Old password is incorrect",
-//       });
-//     }
-
-//     const updates = {};
-//     if (name) updates.name = name;
-//     if (newPassword) updates.password = await bcrypt.hash(newPassword, 10);
-//     if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
-//     if (address) updates.address = address;
-//     if (gender) updates.gender = gender;
-
-//     const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
-
-//     return res.status(200).send({
-//       success: true,
-//       message: "Profile updated successfully",
-//       user: updatedUser,
-//     });
-//   } catch (error) {
-//     console.log("Error in Update Profile Controller", error);
-//     return res.status(500).send({
-//       success: false,
-//       message: "An internal server error occurred.",
-//     });
-//   }
-// };
 
 exports.updateProfileController = async (req, res) => {
   try {
@@ -238,7 +151,7 @@ exports.updateProfileController = async (req, res) => {
       });
     }
 
-    if (!name && !newPassword && !dateOfBirth && !address && !gender) {
+    if (!name && !newPassword && !dateOfBirth && !address && !gender && !req.file) {
       return res.status(400).send({
         success: false,
         message: "Please provide at least one field to update",
@@ -283,6 +196,16 @@ exports.updateProfileController = async (req, res) => {
     if (address) updates.address = address;
     if (gender) updates.gender = gender;
 
+    // Handle profile picture upload
+    if (req.file) {
+      const result = await uploadImageToCloudinary(req.file.path);
+
+      // Remove the file from the server after uploading
+      fs.unlinkSync(req.file.path);
+
+      updates.profilePicture = result.secure_url;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
 
     return res.status(200).send({
@@ -298,6 +221,78 @@ exports.updateProfileController = async (req, res) => {
     });
   }
 };
+
+// exports.updateProfileController = async (req, res) => {
+//   try {
+//     const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = req.body;
+
+//     if (!email) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Email is required to update profile",
+//       });
+//     }
+
+//     if (!name && !newPassword && !dateOfBirth && !address && !gender) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please provide at least one field to update",
+//       });
+//     }
+
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.status(404).send({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     const updates = {};
+
+//     // If new password is provided, validate old password
+//     if (newPassword) {
+//       if (!oldPassword) {
+//         return res.status(400).send({
+//           success: false,
+//           message: "Old password is required to set a new password",
+//         });
+//       }
+
+//       // Verify the old password
+//       const isMatch = await bcrypt.compare(oldPassword, user.password);
+//       if (!isMatch) {
+//         return res.status(401).send({
+//           success: false,
+//           message: "Old password is incorrect",
+//         });
+//       }
+
+//       updates.password = await bcrypt.hash(newPassword, 10);
+//     }
+
+//     // Update other fields if provided
+//     if (name) updates.name = name;
+//     if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
+//     if (address) updates.address = address;
+//     if (gender) updates.gender = gender;
+
+//     const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
+
+//     return res.status(200).send({
+//       success: true,
+//       message: "Profile updated successfully",
+//       user: updatedUser,
+//     });
+//   } catch (error) {
+//     console.log("Error in Update Profile Controller", error);
+//     return res.status(500).send({
+//       success: false,
+//       message: "An internal server error occurred.",
+//     });
+//   }
+// };
 
 exports.getProfileController = async (req, res) => {
   try {
