@@ -222,14 +222,14 @@ exports.updateProfileController = async (req, res) => {
       if (gender) updates.gender = gender;
 
       // Handle profile picture upload
-      if (files.profilePic) {
+      if (req.file) {
         try {
           console.log('Uploading profile picture to Cloudinary...');
           const result = await uploadImageToCloudinary(files.profilePic.path);
           console.log('Upload result:', result);
 
           // Remove the file from the server after uploading
-          fs.unlinkSync(files.profilePic.path);
+          fs.unlinkSync(req.file.path);
 
           updates.profilePic = result.secure_url;
         } catch (uploadError) {
