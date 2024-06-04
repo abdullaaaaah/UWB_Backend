@@ -152,13 +152,16 @@ exports.updateProfileController = async (req, res) => {
           message: 'An internal server error occurred.',
         });
       }
+            // Log all incoming fields and files
+            console.log('Received fields:', fields);
+            console.log('Received files:', files);
 
       // Convert fields from arrays to their expected types
       const email = fields.email ? fields.email[0] : null;
       const oldPassword = fields.oldPassword ? fields.oldPassword[0] : null;
       const name = fields.name ? fields.name[0] : null;
       const newPassword = fields.newPassword ? fields.newPassword[0] : null;
-      const dateofBirth = fields.dateofBirth ? new Date(fields.dateofBirth[0]) : null;
+      const dateofBirth = fields.dateofBirth ? fields.dateofBirth[0] : null;
       const address = fields.address ? fields.address[0] : null;
       const gender = fields.gender ? fields.gender[0] : null;
 
