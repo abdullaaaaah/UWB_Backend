@@ -158,7 +158,7 @@ exports.updateProfileController = async (req, res) => {
       const oldPassword = fields.oldPassword ? fields.oldPassword[0] : null;
       const name = fields.name ? fields.name[0] : null;
       const newPassword = fields.newPassword ? fields.newPassword[0] : null;
-      const dateOfBirth = fields.dateOfBirth ? new Date(fields.dateOfBirth[0]) : null;
+      const dateofBirth = fields.dateofBirth ? new Date(fields.dateofBirth[0]) : null;
       const address = fields.address ? fields.address[0] : null;
       const gender = fields.gender ? fields.gender[0] : null;
 
@@ -169,7 +169,7 @@ exports.updateProfileController = async (req, res) => {
         });
       }
 
-      if (!name && !newPassword && !dateOfBirth && !address && !gender && !files.profilePic) {
+      if (!name && !newPassword && !dateofBirth && !address && !gender && !files.profilePic) {
         return res.status(400).send({
           success: false,
           message: 'Please provide at least one field to update',
@@ -210,7 +210,7 @@ exports.updateProfileController = async (req, res) => {
 
       // Update other fields if provided
       if (name) updates.name = name;
-      if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
+      if (dateofBirth) updates.dateofBirth = dateofBirth;
       if (address) updates.address = address;
       if (gender) updates.gender = gender;
 
