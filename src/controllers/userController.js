@@ -146,30 +146,33 @@ exports.updateProfileController = async (req, res) => {
 
     form.parse(req, async (err, fields, files) => {
       if (err) {
+        console.error('Form parsing error:', err);
         return res.status(500).send({
           success: false,
-          message: "An internal server error occurred.",
+          message: 'An internal server error occurred.',
         });
       }
 
-      // Log the received form data
-      console.log("Received form data:", fields);
-      console.log("Received files:", files);
-
-      // Destructure fields object to extract form data
-      const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = fields;
+      // Convert fields from arrays to their expected types
+      const email = fields.email ? fields.email[0] : null;
+      const oldPassword = fields.oldPassword ? fields.oldPassword[0] : null;
+      const name = fields.name ? fields.name[0] : null;
+      const newPassword = fields.newPassword ? fields.newPassword[0] : null;
+      const dateOfBirth = fields.dateOfBirth ? new Date(fields.dateOfBirth[0]) : null;
+      const address = fields.address ? fields.address[0] : null;
+      const gender = fields.gender ? fields.gender[0] : null;
 
       if (!email) {
         return res.status(400).send({
           success: false,
-          message: "Email is required to update profile",
+          message: 'Email is required to update profile',
         });
       }
 
       if (!name && !newPassword && !dateOfBirth && !address && !gender && !files.profilePic) {
         return res.status(400).send({
           success: false,
-          message: "Please provide at least one field to update",
+          message: 'Please provide at least one field to update',
         });
       }
 
@@ -178,7 +181,7 @@ exports.updateProfileController = async (req, res) => {
       if (!user) {
         return res.status(404).send({
           success: false,
-          message: "User not found",
+          message: 'User not found',
         });
       }
 
@@ -189,7 +192,7 @@ exports.updateProfileController = async (req, res) => {
         if (!oldPassword) {
           return res.status(400).send({
             success: false,
-            message: "Old password is required to set a new password",
+            message: 'Old password is required to set a new password',
           });
         }
 
@@ -198,7 +201,7 @@ exports.updateProfileController = async (req, res) => {
         if (!isMatch) {
           return res.status(401).send({
             success: false,
-            message: "Old password is incorrect",
+            message: 'Old password is incorrect',
           });
         }
 
@@ -218,25 +221,26 @@ exports.updateProfileController = async (req, res) => {
         // Remove the file from the server after uploading
         fs.unlinkSync(files.profilePic.path);
 
-        updates.profilePicture = result.secure_url;
+        updates.profilePic = result.secure_url;
       }
 
       const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
 
       return res.status(200).send({
         success: true,
-        message: "Profile updated successfully",
+        message: 'Profile updated successfully',
         user: updatedUser,
       });
     });
   } catch (error) {
-    console.log("Error in Update Profile Controller", error);
+    console.error('Error in Update Profile Controller', error);
     return res.status(500).send({
       success: false,
-      message: "An internal server error occurred.",
+      message: 'An internal server error occurred.',
     });
   }
 };
+
 
 
 // exports.updateProfileController = async (req, res) => {
