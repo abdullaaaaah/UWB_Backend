@@ -2,6 +2,7 @@ const userModal = require("../models/userModel");
 const User = require('../models/userModel'); // Adjust the import according to your project structure
 const bcrypt = require('bcrypt');
 const cloudinary = require('cloudinary').v2;
+const formidable = require('formidable');
 const fs = require('fs');
 // Cloudinary configuration
 cloudinary.config({
@@ -139,82 +140,94 @@ exports.logoutController = (req, res) => {
 exports.forgetController = (req, res) => {};
 
 
-
 exports.updateProfileController = async (req, res) => {
-
   try {
-    const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = req.body;
-    
-  console.log(req.body);
+    const form = new formidable.IncomingForm();
 
-    if (!email) {
-      return res.status(400).send({
-        success: false,
-        message: "Email is required to update profile",
-      });
-    }
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        return res.status(500).send({
+          success: false,
+          message: "An internal server error occurred.",
+        });
+      }
 
-    if (!name && !newPassword && !dateOfBirth && !address && !gender && !req.file) {
-      return res.status(400).send({
-        success: false,
-        message: "Please provide at least one field to update",
-      });
-    }
+      // Log the received form data
+      console.log("Received form data:", fields);
+      console.log("Received files:", files);
 
-    const user = await User.findOne({ email });
+      // Destructure fields object to extract form data
+      const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = fields;
 
-    if (!user) {
-      return res.status(404).send({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    const updates = {};
-
-    // If new password is provided, validate old password
-    if (newPassword) {
-      if (!oldPassword) {
+      if (!email) {
         return res.status(400).send({
           success: false,
-          message: "Old password is required to set a new password",
+          message: "Email is required to update profile",
         });
       }
 
-      // Verify the old password
-      const isMatch = await bcrypt.compare(oldPassword, user.password);
-      if (!isMatch) {
-        return res.status(401).send({
+      if (!name && !newPassword && !dateOfBirth && !address && !gender && !files.profilePic) {
+        return res.status(400).send({
           success: false,
-          message: "Old password is incorrect",
+          message: "Please provide at least one field to update",
         });
       }
 
-      updates.password = await bcrypt.hash(newPassword, 10);
-    }
+      const user = await User.findOne({ email });
 
-    // Update other fields if provided
-    if (name) updates.name = name;
-    if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
-    if (address) updates.address = address;
-    if (gender) updates.gender = gender;
+      if (!user) {
+        return res.status(404).send({
+          success: false,
+          message: "User not found",
+        });
+      }
 
-    // Handle profile picture upload
-    if (req.file) {
-      const result = await uploadImageToCloudinary(req.file.path);
+      const updates = {};
 
-      // Remove the file from the server after uploading
-      fs.unlinkSync(req.file.path);
+      // If new password is provided, validate old password
+      if (newPassword) {
+        if (!oldPassword) {
+          return res.status(400).send({
+            success: false,
+            message: "Old password is required to set a new password",
+          });
+        }
 
-      updates.profilePicture = result.secure_url;
-    }
+        // Verify the old password
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+          return res.status(401).send({
+            success: false,
+            message: "Old password is incorrect",
+          });
+        }
 
-    const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
+        updates.password = await bcrypt.hash(newPassword, 10);
+      }
 
-    return res.status(200).send({
-      success: true,
-      message: "Profile updated successfully",
-      user: updatedUser,
+      // Update other fields if provided
+      if (name) updates.name = name;
+      if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
+      if (address) updates.address = address;
+      if (gender) updates.gender = gender;
+
+      // Handle profile picture upload
+      if (files.profilePic) {
+        const result = await uploadImageToCloudinary(files.profilePic.path);
+
+        // Remove the file from the server after uploading
+        fs.unlinkSync(files.profilePic.path);
+
+        updates.profilePicture = result.secure_url;
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
+
+      return res.status(200).send({
+        success: true,
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
     });
   } catch (error) {
     console.log("Error in Update Profile Controller", error);
@@ -224,6 +237,7 @@ exports.updateProfileController = async (req, res) => {
     });
   }
 };
+
 
 // exports.updateProfileController = async (req, res) => {
 //   try {
