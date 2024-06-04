@@ -1,4 +1,5 @@
 const User = require('../models/userModel');
+const userModal = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const cloudinary = require('cloudinary').v2;
 const formidable = require('formidable');
