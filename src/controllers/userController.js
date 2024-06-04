@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const cloudinary = require('cloudinary').v2;
 const formidable = require('formidable');
 const fs = require('fs');
+
+
 // Cloudinary configuration
 cloudinary.config({
   cloud_name: "dcoajgeh5",
@@ -28,6 +30,7 @@ const uploadImageToCloudinary = async (filePath) => {
       }
   }
 };
+
 
 exports.registerController = async (req, res) => {
   try {
@@ -152,9 +155,10 @@ exports.updateProfileController = async (req, res) => {
           message: 'An internal server error occurred.',
         });
       }
-            // Log all incoming fields and files
-            console.log('Received fields:', fields);
-            console.log('Received files:', files);
+
+      // Log all incoming fields and files
+      console.log('Received fields:', fields);
+      console.log('Received files:', files);
 
       // Convert fields from arrays to their expected types
       const email = fields.email ? fields.email[0] : null;
@@ -219,12 +223,22 @@ exports.updateProfileController = async (req, res) => {
 
       // Handle profile picture upload
       if (files.profilePic) {
-        const result = await uploadImageToCloudinary(files.profilePic.path);
+        try {
+          console.log('Uploading profile picture to Cloudinary...');
+          const result = await uploadImageToCloudinary(files.profilePic.path);
+          console.log('Upload result:', result);
 
-        // Remove the file from the server after uploading
-        fs.unlinkSync(files.profilePic.path);
+          // Remove the file from the server after uploading
+          fs.unlinkSync(files.profilePic.path);
 
-        updates.profilePic = result.secure_url;
+          updates.profilePic = result.secure_url;
+        } catch (uploadError) {
+          console.error('Error uploading profile picture:', uploadError);
+          return res.status(500).send({
+            success: false,
+            message: 'Error uploading profile picture',
+          });
+        }
       }
 
       const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
