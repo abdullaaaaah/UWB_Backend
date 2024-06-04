@@ -168,14 +168,73 @@ exports.forgetController = (req, res) => {};
 //   }
 // };
 
+// exports.updateProfileController = async (req, res) => {
+//   try {
+//     const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = req.body;
+
+//     if (!email || !oldPassword) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Email and old password are required to update profile",
+//       });
+//     }
+
+//     if (!name && !newPassword && !dateOfBirth && !address && !gender) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please provide at least one field to update",
+//       });
+//     }
+
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.status(404).send({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     // Verify the old password
+//     const isMatch = await bcrypt.compare(oldPassword, user.password);
+//     if (!isMatch) {
+//       return res.status(401).send({
+//         success: false,
+//         message: "Old password is incorrect",
+//       });
+//     }
+
+//     const updates = {};
+//     if (name) updates.name = name;
+//     if (newPassword) updates.password = await bcrypt.hash(newPassword, 10);
+//     if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
+//     if (address) updates.address = address;
+//     if (gender) updates.gender = gender;
+
+//     const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
+
+//     return res.status(200).send({
+//       success: true,
+//       message: "Profile updated successfully",
+//       user: updatedUser,
+//     });
+//   } catch (error) {
+//     console.log("Error in Update Profile Controller", error);
+//     return res.status(500).send({
+//       success: false,
+//       message: "An internal server error occurred.",
+//     });
+//   }
+// };
+
 exports.updateProfileController = async (req, res) => {
   try {
     const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = req.body;
 
-    if (!email || !oldPassword) {
+    if (!email) {
       return res.status(400).send({
         success: false,
-        message: "Email and old password are required to update profile",
+        message: "Email is required to update profile",
       });
     }
 
@@ -195,18 +254,31 @@ exports.updateProfileController = async (req, res) => {
       });
     }
 
-    // Verify the old password
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isMatch) {
-      return res.status(401).send({
-        success: false,
-        message: "Old password is incorrect",
-      });
+    const updates = {};
+
+    // If new password is provided, validate old password
+    if (newPassword) {
+      if (!oldPassword) {
+        return res.status(400).send({
+          success: false,
+          message: "Old password is required to set a new password",
+        });
+      }
+
+      // Verify the old password
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).send({
+          success: false,
+          message: "Old password is incorrect",
+        });
+      }
+
+      updates.password = await bcrypt.hash(newPassword, 10);
     }
 
-    const updates = {};
+    // Update other fields if provided
     if (name) updates.name = name;
-    if (newPassword) updates.password = await bcrypt.hash(newPassword, 10);
     if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
     if (address) updates.address = address;
     if (gender) updates.gender = gender;
@@ -226,3 +298,37 @@ exports.updateProfileController = async (req, res) => {
     });
   }
 };
+
+exports.getProfileController = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).send({
+        success: false,
+        message: "Email is required to get profile data",
+      });
+    }
+
+    const user = await User.findOne({ email }).select('-password'); // Exclude password field
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.log("Error in Get Profile Controller", error);
+    return res.status(500).send({
+      success: false,
+      message: "An internal server error occurred.",
+    });
+  }
+};
+
