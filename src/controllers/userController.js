@@ -141,8 +141,11 @@ exports.forgetController = (req, res) => {};
 
 
 exports.updateProfileController = async (req, res) => {
+
   try {
     const { email, oldPassword, name, newPassword, dateOfBirth, address, gender } = req.body;
+    
+  console.log(req.body);
 
     if (!email) {
       return res.status(400).send({
