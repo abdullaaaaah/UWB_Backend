@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController');
-const {storage} = require('../services/storage');
 const multer = require('multer');
-
+const { addSite, getSiteByName,getSiteByNameAndEmail ,getAllSitesByEmail,deleteSiteByName,deleteSiteByNameAndEmail} = require('../controllers/siteController');
+const {storage} = require('../services/storage');
 
 const upload = multer({ storage });
 
-router.post('/signup', userController.registerController);
-router.post('/login', userController.loginController);
-router.post('/logout', userController.logoutController);
-router.post('/updateprofile', upload.single('upload'), userController.updateProfileController);
-router.get('/getProfile', userController.getProfileController);
+router.post('/sites', upload.single('image'), addSite);
+router.get('/sites',getAllSitesByEmail);
+router.get('/sitesDetail', getSiteByNameAndEmail);
+router.get('/sites',getSiteByName);
+router.delete('/sites', deleteSiteByName); // New route
+router.delete('/sites', deleteSiteByNameAndEmail); // New route
 
 module.exports = router;
