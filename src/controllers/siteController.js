@@ -1,33 +1,7 @@
-const cloudinary = require('cloudinary').v2;
 const Site = require('../models/siteModel');
 const fs = require('fs');
-const path = require('path');
 
-// Cloudinary configuration
-cloudinary.config({
-    cloud_name: "dcoajgeh5",
-    api_key: "398428448442352",
-    api_secret: "Rm7Sy0n4EWRx7MY20-i1SM2CCz0",
-});
-
-const uploadImageToCloudinary = async (filePath) => {
-    const maxRetries = 3;
-    let attempt = 0;
-
-    while (attempt < maxRetries) {
-        try {
-            const result = await cloudinary.uploader.upload(filePath);
-            return result;
-        } catch (error) {
-            console.error(`Attempt ${attempt + 1} failed:`, error);
-            attempt++;
-            if (attempt >= maxRetries) {
-                throw error;
-            }
-        }
-    }
-};
-
+const {uploadImageToCloudinary} = require('../services/cloudnary');
 const addSite = async (req, res) => {
     try {
         console.log('Request Body:', req.body);
