@@ -111,7 +111,7 @@ const getAllSitesByEmail = async (req, res) => {
             return res.status(400).json({ error: 'Email is required' });
         }
         //added description - azmat
-        const sites = await Site.find({ email }).select('name imageUrl description').lean(); // .lean() returns plain JavaScript objects
+        const sites = await Site.find({ email }).select('name imageUrl').lean(); // .lean() returns plain JavaScript objects
         // const sites = await Site.find().lean();
         // const sites = await Site.find({}).select('name imageUrl').lean();
 
