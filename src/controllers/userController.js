@@ -33,105 +33,90 @@ const uploadImageToCloudinary = async (filePath) => {
 
 exports.updateProfileController = async (req, res) => {
   try {
-    const form = new formidable.IncomingForm();
+    console.log('Request Body:', req.body);
 
-    form.parse(req, async (err, fields, files) => {
-      if (err) {
-        console.error('Form parsing error:', err);
-        return res.status(500).send({
-          success: false,
-          message: 'An internal server error occurred.',
-        });
-      }
+    const { email, oldPassword, name, newPassword, dateofBirth, address, gender } = req.body;
 
-      // Log all incoming fields and files
-      console.log('Received fields:', fields);
-      console.log('Received files:', files);
+    if (!email) {
+      return res.status(400).send({
+        success: false,
+        message: 'Email is required to update profile',
+      });
+    }
 
-      const { email, oldPassword, name, newPassword, dateofBirth, address, gender } = fields;
+    const user = await User.findOne({ email });
 
-      if (!email) {
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    const updates = {};
+
+    // If new password is provided, validate old password
+    if (newPassword) {
+      if (!oldPassword) {
         return res.status(400).send({
           success: false,
-          message: 'Email is required to update profile',
+          message: 'Old password is required to set a new password',
         });
       }
 
-      const user = await User.findOne({ email });
-
-      if (!user) {
-        return res.status(404).send({
+      // Verify the old password
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).send({
           success: false,
-          message: 'User not found',
+          message: 'Old password is incorrect',
         });
       }
 
-      const updates = {};
+      updates.password = await bcrypt.hash(newPassword, 10);
+    }
 
-      // If new password is provided, validate old password
-      if (newPassword) {
-        if (!oldPassword) {
-          return res.status(400).send({
-            success: false,
-            message: 'Old password is required to set a new password',
-          });
-        }
+    // Update other fields if provided
+    if (name) updates.name = name;
+    if (dateofBirth) updates.dateofBirth = dateofBirth;
+    if (address) updates.address = address;
+    if (gender) updates.gender = gender;
 
-        // Verify the old password
-        const isMatch = await bcrypt.compare(oldPassword, user.password);
-        if (!isMatch) {
-          return res.status(401).send({
-            success: false,
-            message: 'Old password is incorrect',
-          });
-        }
+    // Handle profile picture upload from Multer
+    if (req.file) {
+      try {
+        console.log('Uploading profile picture to Cloudinary...');
+        const result = await uploadImageToCloudinary(req.file.path); // Await upload to Cloudinary
+        console.log('Upload result:', result);
 
-        updates.password = await bcrypt.hash(newPassword, 10);
+        // Remove the file from the server after uploading
+        fs.unlinkSync(req.file.path);
+
+        updates.profilePic = result.secure_url; // Store the image URL in the updates object
+      } catch (uploadError) {
+        console.error('Error uploading profile picture:', uploadError);
+        return res.status(500).send({
+          success: false,
+          message: 'Error uploading profile picture',
+        });
       }
+    }
 
-      // Update other fields if provided
-      if (name) updates.name = name;
-      if (dateofBirth) updates.dateofBirth = dateofBirth;
-      if (address) updates.address = address;
-      if (gender) updates.gender = gender;
+    // Update user document with the new data
+    const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
 
-      // Handle profile picture upload
-      if (files.profilePic) {
-        try {
-          console.log('Uploading profile picture to Cloudinary...');
-          const result = await uploadImageToCloudinary(files.profilePic.path); // Await upload to Cloudinary
-          console.log('Upload result:', result);
-
-          // Remove the file from the server after uploading
-          fs.unlinkSync(files.profilePic.path);
-
-          updates.profilePic = result.secure_url; // Store the image URL in the updates object
-        } catch (uploadError) {
-          console.error('Error uploading profile picture:', uploadError);
-          return res.status(500).send({
-            success: false,
-            message: 'Error uploading profile picture',
-          });
-        }
-      }
-
-      // Update user document with the new data
-      const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
-
-      return res.status(200).send({
-        success: true,
-        message: 'Profile updated successfully',
-        user: updatedUser,
-      });
+    return res.status(200).send({
+      success: true,
+      message: 'Profile updated successfully',
+      user: updatedUser,
     });
   } catch (error) {
     console.error('Error in Update Profile Controller', error);
     return res.status(500).send({
       success: false,
       message: 'An internal server error occurred.',
-    });
-  }
-};
+    });}};
+
 
 exports.registerController = async (req, res) => {
   try {
